@@ -48,9 +48,9 @@ def computeTotalReturns(data):
     totalReturns = {}
     for index, row in data.iterrows():
         if row['stock_number'] in totalReturns.keys():
-            totalReturns[int(row['stock_number'])] *= (1 + row['return_rf'] + row['RiskFreeReturn'])
+            totalReturns[int(row['stock_number'])] *= ((1 + row['return_rf'])**(1/12))
         else:
-            totalReturns[int(row['stock_number'])] = (1 + row['return_rf'] + row['RiskFreeReturn'])
+            totalReturns[int(row['stock_number'])] = ((1 + row['return_rf'])**(1/12))
     return totalReturns
 
 def constructPortfolios(totalReturns):
@@ -112,9 +112,10 @@ def splitData(data):
 
 def getPfReturns(pf_name) :
     results = []
-
+    tmpCumulReturn = 1
     for pos_id in sorted(positions.keys()):
-        results.append(positions[pos_id]['portfolios'][pf_name]['rent'])
+        tmpCumulReturn *= 1 + positions[pos_id]['portfolios'][pf_name]['rent']
+        results.append(tmpCumulReturn)
     return results
 
 def getTransCost(pf_name) :
@@ -133,6 +134,7 @@ exc = pd.ExcelFile("./cleanedData.xlsx")
 df = exc.parse(0)
 splitData(df)
 print(getPfReturns("Momentum"))
+print(getPfReturns(10))
 print(getTransCost("Momentum"))
 
 #

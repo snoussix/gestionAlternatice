@@ -39,6 +39,7 @@ df2 = df2.loc[~df2['illiq_amihud'].apply(np.isnan)]
 df2 = df2.loc[~df2['return_rf'].apply(np.isnan)]
 df2 = df2.loc[~df2['AIM_t1'].apply(np.isnan)]
 df2 = df2.loc[~df2['AIM'].apply(np.isnan)]
+df2 = df2.loc[~df2['RiskFreeReturn'].apply(np.isnan)]
 
 l = []
 

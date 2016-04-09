@@ -1,5 +1,6 @@
 import pandas as pd
-
+import numpy as np
+np.seterr(all='raise')
 
 
 startMonth = 7
@@ -146,7 +147,7 @@ for i in range(1, 11):
     print("\\hline " +str(i)+" & ",end="")
     Res = getPfReturns(i)
     for j in range(0,10):
-        print("{:.2f}".format(Res[j])+"% & ", end="")
+        print("{:.5f}".format(Res[j]*100)+"% & ", end="")
     print("\\\\")
 #
 # def execute(data, nbStock):

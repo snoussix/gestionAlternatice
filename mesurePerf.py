@@ -3,6 +3,7 @@ import pandas as pd
 
 
 startMonth = 7
+
 startYear = 1995
 endMonth = 12
 endYear = 2005
@@ -48,9 +49,9 @@ def computeTotalReturns(data):
     totalReturns = {}
     for index, row in data.iterrows():
         if row['stock_number'] in totalReturns.keys():
-            totalReturns[int(row['stock_number'])] *= ((1 + row['return_rf'])**(1/12))
+            totalReturns[int(row['stock_number'])] *= ((1 + row['return_rf']-row['RiskFreeReturn'])**(1/12))
         else:
-            totalReturns[int(row['stock_number'])] = ((1 + row['return_rf'])**(1/12))
+            totalReturns[int(row['stock_number'])] = ((1 + row['return_rf']-row['RiskFreeReturn'])**(1/12))
     return totalReturns
 
 def constructPortfolios(totalReturns):
@@ -86,6 +87,7 @@ def computeTransacCost():
                         newPortfolio['trans_cost'] = abs(positions[i-1]['holdTotalReturn'][oldStock]-(oldPortfolio['rent']+1))*trans_rate/nbStock
                     else:
                         newPortfolio['trans_cost'] = (positions[i-1]['holdTotalReturn'][oldStock] + 1)*trans_rate/nbStock
+        #en supposant qu'un dans les 10 premiers ne sera pas dans les dix derniers l'année d'après et inversement!! vrai en general mais ici??
         positions[i]['portfolios']['Momentum']['trans_cost'] = positions[i]['portfolios'][1]['trans_cost'] + positions[i]['portfolios'][int(100 / nbStock)]['trans_cost']
 
 
@@ -114,7 +116,7 @@ def getPfReturns(pf_name) :
     results = []
     tmpCumulReturn = 1
     for pos_id in sorted(positions.keys()):
-        tmpCumulReturn *= 1 + positions[pos_id]['portfolios'][pf_name]['rent']
+        tmpCumulReturn *= (1 + positions[pos_id]['portfolios'][pf_name]['rent'])
         results.append(tmpCumulReturn)
     return results
 
@@ -135,8 +137,17 @@ df = exc.parse(0)
 splitData(df)
 print(getPfReturns("Momentum"))
 print(getPfReturns(10))
+print(getPfReturns(1))
 print(getTransCost("Momentum"))
-
+print()
+print()
+print()
+for i in range(1, 11):
+    print("\\hline " +str(i)+" & ",end="")
+    Res = getPfReturns(i)
+    for j in range(0,10):
+        print("{:.2f}".format(Res[j])+"% & ", end="")
+    print("\\\\")
 #
 # def execute(data, nbStock):
 #     portRentas = {}

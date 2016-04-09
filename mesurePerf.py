@@ -1,135 +1,140 @@
-import numpy as np
 import pandas as pd
-import datetime as dt
 
 
-class Momentum:
 
-    def __init__(self, nbStock):
-        exc = pd.ExcelFile("./cleanedData.xlsx")
-        self.data = exc.parse(0)
-        self.stockPrices = {}
-        for stock_nb in self.data.stock_number.unique():
-            self.stockPrices[stock_nb] = 100
-        self.lastYear = 2005
-        self.lastMonth = 12
-        self.nbStock = nbStock
-        self.trans_cost = 0
+startMonth = 7
+startYear = 1995
+endMonth = 12
+endYear = 2005
+nbPositions = 10
+estLength = 6
+holdLength = 12
+nbStock = 10
+positions = {}
+trans_rate = 0.001
 
-
-    def isEnough(self, month, year, nbMonth):
-        tmpYear = year
-        tmpMonth = month
+def incrMonth(year, month, nbMonth):
+    tmpNbMonth = 0
+    tmpMonth = month
+    tmpYear = year
+    while (tmpNbMonth < nbMonth):
         if tmpMonth == 12:
             tmpYear += 1
             tmpMonth = 1
         else:
             tmpMonth += 1
-        tmpNbMonth = 1
-        while (tmpYear < self.lastYear or (tmpYear == self.lastYear and tmpMonth < self.lastMonth)):
-            if (tmpNbMonth >= nbMonth) :
-                return 'true'
-            tmpNbMonth += 1;
-            if tmpMonth == 12:
-                tmpYear += 1
-                tmpMonth = 1
-            else:
-                tmpMonth = 1
-        return 'false'
+        tmpNbMonth += 1
+    return [tmpMonth,tmpYear]
 
-
-
-    def incrMonth(self):
-        if self.month == 12:
-            self.year += 1
-            self.month = 1
+def decrMonth(year, month, nbMonth):
+    tmpNbMonth = 0
+    tmpMonth = month
+    tmpYear = year
+    while (tmpNbMonth > nbMonth):
+        if tmpMonth == 1:
+            tmpYear -= 1
+            tmpMonth = 12
         else:
-            self.month = 1
+            tmpMonth -= 1
+        tmpNbMonth -= 1
+    return [tmpMonth,tmpYear]
 
-    def computeRenta(self, beginYear, beginMonth, endYear, endMonth):
-        tmpMonth = 0
-        while (tmpMonth < addMonth):
-            tmpMonth+=1
-            self.incrMonth()
-            df = self.data.loc[(self.data['year']==self.year) & (self.data['month']>self.month)]
-            for index, row in df.iterrows():
-                self.stockPrices[row['stock_number']] *= (1 + row['return_rf'] + row['RiskFreeReturn'])
-
-    def computeReturn(self, oldPrice):
-        returns = {}
-        for stock_nb in self.stockPrices:
-            returns[stock_nb] = (self.stockPrices[stock_nb] - oldPrice[stock_nb])
-        return returns
-
-    def modifPfs(self):
-
-
-    def execute(self,  estimMonth, holdMonth):
-        while (self.year < 2006):
-            oldPrice = self.stockPrices.copy()
-            self.simulate(estimMonth)
-            returns = self.computeReturn(oldPrice)
-            '''Construction du portefeuille initiale'''
-            sortRet = sorted(returns, key=returns.get)
-            self.portfolios = {}
-            for index, value in enumerate(sortRet):
-                portId = int(index / self.nbStock) + 1
-                if not portId in self.portfolios.keys():
-                    self.portfolios[portId] = {'stocks' : [], 'price' : 100}
-                self.portfolios[portId]['stocks'].append(value)
-            print(self.portfolios)
-            self.trans_cost = 0.2
+def isBetween(date, stt, end):
+    return ((date[0] + date[1]*12) >= (stt[0] + stt[1]*12)) & ((date[0] + date[1]*12) < (end[0] + end[1]*12))
 
 
 
+def computeTotalReturns(data):
+    totalReturns = {}
+    for index, row in data.iterrows():
+        if row['stock_number'] in totalReturns.keys():
+            totalReturns[int(row['stock_number'])] *= (1 + row['return_rf'] + row['RiskFreeReturn'])
+        else:
+            totalReturns[int(row['stock_number'])] = (1 + row['return_rf'] + row['RiskFreeReturn'])
+    return totalReturns
 
-mom = Momentum(10)
-mom.execute(6,12)
+def constructPortfolios(totalReturns):
+    portfolios = {}
+    sortTotRet = sorted(totalReturns, key=totalReturns.get)
+    for index, value in enumerate(sortTotRet):
+        portName = int(index / nbStock) + 1
+        if portName in portfolios.keys():
+            portfolios[portName]['stocks'].append(value)
+        else:
+            portfolios[portName] = {'stocks': [value]}
+    return portfolios
+
+def computePortRent(totalReturns, portfolios):
+    for name in portfolios:
+        portfolios[name]['rent'] = 0
+        for stock in portfolios[name]['stocks']:
+            portfolios[name]['rent'] += ((totalReturns[stock] - 1) / nbStock)
+
+    portfolios['Momentum'] = { 'rent' : portfolios[int(100/nbStock)]['rent'] - portfolios[1]['rent'] }
+    return portfolios
+
+def computeTransacCost():
+    for i in range(nbPositions):
+        for pf_name in range(1, int(100 / nbStock) + 1):
+            if i == 0 :
+                positions[0]['portfolios'][pf_name]['trans_cost'] = trans_rate
+            else:
+                oldPortfolio = positions[i-1]['portfolios'][pf_name]
+                newPortfolio = positions[i]['portfolios'][pf_name]
+                for oldStock in oldPortfolio['stocks'] :
+                    if oldStock in newPortfolio['stocks'] :
+                        newPortfolio['trans_cost'] = abs(positions[i-1]['holdTotalReturn'][oldStock]-(oldPortfolio['rent']+1))/nbStock
+                    else:
+                        newPortfolio['trans_cost'] = (positions[i-1]['holdTotalReturn'][oldStock] + 1)/nbStock
+        positions[i]['portfolios']['Momentum']['trans_cost'] = positions[i]['portfolios'][1]['trans_cost'] + positions[i]['portfolios'][int(100 / nbStock)]['trans_cost']
 
 
 
 
 
+def splitData(data):
+    stPos = [startMonth, startYear]
+    endPos = incrMonth(startYear, startMonth, estLength)
+    for i in range(nbPositions):
+        positions[i] = {}
+        positions[i]['estData'] = data.loc[isBetween([data['month'],data['year']],stPos,endPos)]
+        stPos = endPos
+        endPos = incrMonth(endPos[1], endPos[0], holdLength)
+        positions[i]['holdData'] = data.loc[isBetween([data['month'],data['year']],stPos,endPos)]
 
-def splitData()
+        positions[i]['estTotalReturn'] = computeTotalReturns(positions[i]['estData'])
+        positions[i]['holdTotalReturn'] = computeTotalReturns(positions[i]['holdData'])
+        positions[i]['portfolios'] = constructPortfolios(positions[i]['holdTotalReturn'])
+        positions[i]['portfolios'] = computePortRent(positions[i]['holdTotalReturn'], positions[i]['portfolios'])
+        stPos = decrMonth(endPos[1], endPos[0], estLength)
+    computeTransacCost()
+
+
+def getPfReturns(pf_name) :
+    results = []
+
+    for pos_id in sorted(positions.keys()):
+        results.append(positions[pos_id]['portfolios'][pf_name]['rent'])
+    return results
+
+def getTransCost(pf_name) :
+    results = []
+    tmpCost = 0
+    tmpPortPrice = 1
+    for pos_id in sorted(positions.keys()):
+        tmpCost += positions[pos_id]['portfolios'][pf_name]['trans_cost']*tmpPortPrice
+        tmpPortPrice *= positions[pos_id]['portfolios'][pf_name]['rent']
+        results.append(tmpCost)
+    return results
 
 
 
-#
-# def computeTotalReturns(data):
-#     totalReturns = {}
-#     for index, row in data.iterrows():
-#         if row['stock_number'] in totalReturns.keys():
-#             totalReturns[int(row['stock_number'])] *= (1 + row['return_rf'] + row['RiskFreeReturn'])
-#         else:
-#             totalReturns[int(row['stock_number'])] = (1 + row['return_rf'] + row['RiskFreeReturn'])
-#     return totalReturns
-#
-# def constructPortfolios(data, nbStock):
-#     totalReturns = computeTotalReturns(data)
-#     portfolios = {}
-#     sortTotRet = sorted(totalReturns, key=totalReturns.get)
-#     for index, value in enumerate(sortTotRet):
-#         portName = (index % nbStock) + 1
-#         if portName in portfolios.keys():
-#             portfolios[portName]['stocks'].append({'stock_number' : value})
-#         else:
-#             portfolios[portName] = {'stocks': [{'stock_number' : value}]}
-#     return portfolios
-#
-# def modifyPortfolio(data, nbStock):
-#
-#
-# def computePortRent(data, portfolios, nbStock):
-#     totalReturns = computeTotalReturns(data)
-#     for name in portfolios:
-#         portfolios[name]['rent'] = 0
-#         for stock in portfolios[name]['stocks']:
-#             portfolios[name]['rent'] += ((totalReturns[stock['stock_number']] - 1) / nbStock)
-#             stock['rent'] = totalReturns[stock['stock_number']] - 1
-#
-#     portfolios['Momentum'] = { 'rent' : portfolios[int(100/nbStock)]['rent'] - portfolios[1]['rent'] }
-#     return portfolios
+exc = pd.ExcelFile("./cleanedData.xlsx")
+df = exc.parse(0)
+splitData(df)
+print(getPfReturns("Momentum"))
+print(getTransCost("Momentum"))
+
 #
 # def execute(data, nbStock):
 #     portRentas = {}

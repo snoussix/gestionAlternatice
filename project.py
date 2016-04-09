@@ -47,7 +47,8 @@ for i in list(set(df2['stock_number'])) :
         l.append(i)
 
 df2 = df2.loc[df2['stock_number'].isin(l)]
-tmp = [557,116,624,626,68,591,241,247,312,7,554,559]
+#      517,520,524,532,1057,547,,559,117,82,511,497,357
+tmp = [517,520,524,532,1057,547,559,117,82,511,497]
 df2 = df2.loc[~df2['stock_number'].isin(tmp)]
 cleanDf = df2[['stock_number','year','month','return_rf','RiskFreeReturn']]
 writer = pd.ExcelWriter("./cleanedData.xlsx")

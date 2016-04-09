@@ -83,9 +83,9 @@ def computeTransacCost():
                 newPortfolio = positions[i]['portfolios'][pf_name]
                 for oldStock in oldPortfolio['stocks'] :
                     if oldStock in newPortfolio['stocks'] :
-                        newPortfolio['trans_cost'] = abs(positions[i-1]['holdTotalReturn'][oldStock]-(oldPortfolio['rent']+1))/nbStock
+                        newPortfolio['trans_cost'] = abs(positions[i-1]['holdTotalReturn'][oldStock]-(oldPortfolio['rent']+1))*trans_rate/nbStock
                     else:
-                        newPortfolio['trans_cost'] = (positions[i-1]['holdTotalReturn'][oldStock] + 1)/nbStock
+                        newPortfolio['trans_cost'] = (positions[i-1]['holdTotalReturn'][oldStock] + 1)*trans_rate/nbStock
         positions[i]['portfolios']['Momentum']['trans_cost'] = positions[i]['portfolios'][1]['trans_cost'] + positions[i]['portfolios'][int(100 / nbStock)]['trans_cost']
 
 

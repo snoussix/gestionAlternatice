@@ -58,6 +58,17 @@ def computeReturns(data):
             returns[int(row['stock_number'])] = [(1 + row['return_rf'] - row['RiskFreeReturn'])**(1 / 12)]
     return returns
 
+def computeTotalBeta(data):
+    totalBeta = {}
+    for index, row in data.iterrows():
+        if row['stock_number'] in totalBeta.keys():
+            totalBeta[int(row['stock_number'])] += row('betaHML')
+        else:
+            totalBeta[int(row['stock_number'])] =  row('betaHML')
+    return totalBeta
+
+
+
 def computeTotalReturns(data):
     totalReturns = {}
     for index, row in data.iterrows():
@@ -66,6 +77,16 @@ def computeTotalReturns(data):
         else:
             totalReturns[int(row['stock_number'])] = ((1 + row['return_rf']-row['RiskFreeReturn'])**(1/12))
     return totalReturns
+
+def constructPortfoliosBeta(totalReturns):
+    portfolios = {}
+    sortTotRet = sorted(totalReturns, key=totalReturns.get)
+    for index, value in enumerate(sortTotRet):
+        if 'beta' in portfolios.keys():
+            portfolios['beta']['stocks'].append(value)
+        else:
+            portfolios['beta'] = {'stocks': [value]}
+    return portfolios
 
 def constructPortfolios(totalReturns):
     portfolios = {}
@@ -135,6 +156,7 @@ def splitData(data):
         positions[i]['holdData'] = data.loc[isBetween([data['month'],data['year']],stPos,endPos)]
 
         positions[i]['estTotalReturn'] = computeTotalReturns(positions[i]['estData'])
+        positions[i]['estBetaHML'] = computeTotalBeta(positions[i]['estData'])
         positions[i]['holdTotalReturn'] = computeTotalReturns(positions[i]['holdData'])
         positions[i]['holdReturns'] = computeReturns(positions[i]['holdData'])
         positions[i]['portfolios'] = constructPortfolios(positions[i]['holdTotalReturn'])

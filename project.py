@@ -54,7 +54,7 @@ df2 = df2.loc[~df2['stock_number'].isin(tmp)]
 
 cleanDf = df2[['stock_number','year','month','return_rf','RiskFreeReturn','betaHML']]
 
-cleaner=['stock_number','year','month','return_rf','RiskFreeReturn','betaHML']
+cleaner=['stock_number','return_rf','RiskFreeReturn','betaHML']
 temp=[]
 for name in cleaner:
     # we don't use list comprehension to preserve mean
@@ -65,8 +65,6 @@ for name in cleaner:
         mean2=(prec1+prec2)/2.0
         if np.isnan(x):
             cleanDf[name][index]=mean2
-        else:
-            cleanDf[name][index]=x
         prec2=prec1
         prec1=x
 

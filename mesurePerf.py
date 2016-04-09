@@ -49,7 +49,7 @@ def computeReturns(data):
     returns = {}
     for index, row in data.iterrows():
         if row['stock_number'] in returns.keys():
-            returns[int(row['stock_number'])].append((1 + row['return_rf']-row['RiskFreeReturn'])**(1/12))
+            returns[int(row['stock_number'])].append(row['return_rf']-row['RiskFreeReturn'])
         else:
             returns[int(row['stock_number'])] = [(1 + row['return_rf'] - row['RiskFreeReturn'])**(1 / 12)]
     return returns
@@ -100,14 +100,21 @@ def computeTransacCost():
         positions[i]['portfolios']['Momentum']['trans_cost'] = positions[i]['portfolios'][1]['trans_cost'] + positions[i]['portfolios'][int(100 / nbStock)]['trans_cost']
 
 
-# def computeSharpeRatio():
-#     for i in range(nbPositions):
-#         for pf_name in range(1, int(100 / nbStock) + 1):
-#             pos = positions[i]
-#             pf = pos['portfolios'][pf_name]
-#             for i in range(holdLength):
-#                 for stock in pf['stocks']:
-#                     return = pos['holdReturns'][stock]
+def computeSharpeRatio():
+    for i in range(nbPositions):
+        pos = positions[i]
+        for pf_name in range(1, int(100 / nbStock) + 1):
+            pf = pos['portfolios'][pf_name]
+            tmpReturns = np.zeros(holdLength)
+            for stock in pf['stocks']:
+                tmpReturns += np.array(pos['holdReturns'][stock])/nbStock
+            pf['returns'] = tmpReturns
+            pf['sharpeRatio'] = np.sqrt(12) * tmpReturns.mean() / tmpReturns.std()
+        pos['portfolios']["Momentum"]['returns'] = pos['portfolios'][int(100/nbStock)]['returns'] - pos['portfolios'][1]['returns']
+        tmpReturns = pos['portfolios']["Momentum"]['returns']
+        pos['portfolios']["Momentum"]['sharpeRatio'] = np.sqrt(12) * tmpReturns.mean() / tmpReturns.std()
+
+
 
 
 
@@ -130,6 +137,7 @@ def splitData(data):
         positions[i]['portfolios'] = computePortRent(positions[i]['holdTotalReturn'], positions[i]['portfolios'])
         stPos = decrMonth(endPos[1], endPos[0], estLength)
     computeTransacCost()
+    computeSharpeRatio()
 
 
 
@@ -158,14 +166,19 @@ def getTransCost(pf_name) :
         results.append(tmpCost)
     return results
 
+def getSharpeRatio(pf_name) :
+    results = []
+    for pos_id in sorted(positions.keys()):
+        results.append(positions[pos_id]['portfolios'][pf_name]['sharpeRatio'])
+    return results
+
 
 
 exc = pd.ExcelFile("./cleanedData.xlsx")
 df = exc.parse(0)
 splitData(df)
-print(getPfReturns("Momentum"))
+print(getSharpeRatio("Momentum"))
 print(getPfReturns(3))
-print(getPfReturns(1))
 print(getTransCost("Momentum"))
 print()
 print()

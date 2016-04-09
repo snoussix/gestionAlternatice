@@ -2,18 +2,22 @@ import pandas as pd
 import numpy as np
 np.seterr(all='print')
 
+def getMonthCount(y1, m1, y2, m2):
+    return (y2 - y1)*12 + m2 - m1
+
 
 startMonth = 7
 
 startYear = 1990
 endMonth = 12
 endYear = 2000
-nbPositions = 10
 estLength = 6
-holdLength = 12
+holdLength = 6
 nbStock = 10
 positions = {}
 trans_rate = 0.001
+nbPositions = int((getMonthCount(startYear, startMonth, endYear, endMonth) + 1 - estLength) / holdLength)
+print(nbPositions)
 
 def incrMonth(year, month, nbMonth):
     tmpNbMonth = 0
@@ -95,7 +99,7 @@ def computeTransacCost():
                     if oldStock in newPortfolio['stocks'] :
                         newPortfolio['trans_cost'] = abs(positions[i-1]['holdTotalReturn'][oldStock]-(oldPortfolio['rent']+1))*trans_rate/nbStock
                     else:
-                        newPortfolio['trans_cost'] = (positions[i-1]['holdTotalReturn'][oldStock] + 1)*trans_rate/nbStock
+                        newPortfolio['trans_cost'] = (positions[i-1]['holdTotalReturn'][oldStock] + (oldPortfolio['rent']+1))*trans_rate/nbStock
         #en supposant qu'un dans les 10 premiers ne sera pas dans les dix derniers l'année d'après et inversement!! vrai en general mais ici??
         positions[i]['portfolios']['Momentum']['trans_cost'] = positions[i]['portfolios'][1]['trans_cost'] + positions[i]['portfolios'][int(100 / nbStock)]['trans_cost']
 
@@ -156,14 +160,22 @@ def getPfReturns(pf_name) :
         results.append(positions[pos_id]['portfolios'][pf_name]['rent']*100)
     return results
 
-def getTransCost(pf_name) :
+def getCumulTransCost(pf_name) :
     results = []
     tmpCost = 0
+    tmpPortPrice2 = 1
     tmpPortPrice = 1
     for pos_id in sorted(positions.keys()):
-        tmpCost += positions[pos_id]['portfolios'][pf_name]['trans_cost']*tmpPortPrice
-        tmpPortPrice *= positions[pos_id]['portfolios'][pf_name]['rent']
-        results.append(tmpCost)
+        tmpCost += positions[pos_id]['portfolios'][pf_name]['trans_cost']*tmpPortPrice2
+        tmpPortPrice2 = tmpPortPrice
+        tmpPortPrice *= (1+positions[pos_id]['portfolios'][pf_name]['rent'])
+        results.append(tmpCost*100)
+    return results
+
+def getTransCost(pf_name) :
+    results = []
+    for pos_id in sorted(positions.keys()):
+        results.append(positions[pos_id]['portfolios'][pf_name]['trans_cost']*100)
     return results
 
 def getSharpeRatio(pf_name) :
@@ -178,20 +190,22 @@ exc = pd.ExcelFile("./cleanedData.xlsx")
 df = exc.parse(0)
 splitData(df)
 print(getSharpeRatio("Momentum"))
-print(getPfReturns(3))
-print(getTransCost("Momentum"))
+print(getCumulPfReturns("Momentum"))
+print(getCumulTransCost("Momentum"))
 print()
 print()
 print()
 for i in range(1, 11):
     print("\\hline " + 'P'+ str(i)+" & ",end="")
-    Res = getCumulPfReturns(i)
-    for j in range(0,10):
-        print("{:.2f}".format(Res[j])+"\% & ", end="")
+    Res = getCumulTransCost(i)
+    for j in range(0,nbPositions):
+        print("{:.5f}".format(Res[j])+"\% & ", end="")
     print("\\\\")
 
 print("\\hline " +"Momentum"+" & ",end="")
-Res = getCumulPfReturns("Momentum")
-for j in range(0,10):
-    print("{:.2f}".format(Res[j]) + "\% & ", end="")
+Res = getCumulTransCost("Momentum")
+for j in range(0,nbPositions):
+    print("{:.5f}".format(Res[j]) + "\% & ", end="")
 print("\\\\")
+
+

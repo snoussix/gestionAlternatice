@@ -155,28 +155,3 @@ for i in range(1, 11):
     for j in range(0,10):
         print("{:.2f}".format(Res[j])+"% & ", end="")
     print("\\\\")
-#
-# def execute(data, nbStock):
-#     portRentas = {}
-#     marketPortfolioPrices = {1995: '100'}
-#     for year in range(1996,2006):
-#         df = data.loc[(data['year']==year-1) & (data['month']>6)]
-#         portfolios = constructPortfolios(df, nbStock)
-#         df2 = data.loc[(data['year']==year)]
-#         portfolios = computePortRent(df2, portfolios, nbStock)
-#         for name in portfolios:
-#             if name in portRentas.keys():
-#                 portRentas[name][year] = int(portfolios[name]['rent'] * 10000) / 100
-#             else:
-#                 portRentas[name] = { year : int(portfolios[name]['rent'] * 10000) / 100 }
-#
-#     return portRentas
-#
-# exc = pd.ExcelFile("./cleanedData.xlsx")
-# df = exc.parse(0)
-# result = execute(df,10)
-# print(result['Momentum'])
-# for year in result['Momentum']:
-#     print( result['Momentum'][year], ' \%' , end=' & ')
-# print(' ')
-# print(result)

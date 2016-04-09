@@ -8,11 +8,11 @@ def getMonthCount(y1, m1, y2, m2):
 
 startMonth = 7
 
-startYear = 1990
+startYear = 1991
 endMonth = 12
-endYear = 2000
+endYear = 2001
 estLength = 6
-holdLength = 6
+holdLength = 12
 nbStock = 10
 positions = {}
 trans_rate = 0.001
@@ -36,13 +36,13 @@ def decrMonth(year, month, nbMonth):
     tmpNbMonth = 0
     tmpMonth = month
     tmpYear = year
-    while (tmpNbMonth > nbMonth):
+    while (tmpNbMonth < nbMonth):
         if tmpMonth == 1:
             tmpYear -= 1
             tmpMonth = 12
         else:
             tmpMonth -= 1
-        tmpNbMonth -= 1
+        tmpNbMonth += 1
     return [tmpMonth,tmpYear]
 
 def isBetween(date, stt, end):
@@ -79,12 +79,12 @@ def constructPortfolios(totalReturns):
     return portfolios
 
 def computePortRent(totalReturns, portfolios):
-    for name in portfolios:
-        portfolios[name]['rent'] = 0
-        for stock in portfolios[name]['stocks']:
-            portfolios[name]['rent'] += ((totalReturns[stock] - 1) / nbStock)
-
+    for pf_id in range(1,int(100/nbStock) + 1):
+        portfolios[pf_id]['rent'] = 0
+        for stock in portfolios[pf_id]['stocks']:
+            portfolios[pf_id]['rent'] += ((totalReturns[stock] - 1) / nbStock)
     portfolios['Momentum'] = { 'rent' : portfolios[int(100/nbStock)]['rent'] - portfolios[1]['rent'] }
+
     return portfolios
 
 def computeTransacCost():
@@ -133,13 +133,13 @@ def splitData(data):
         stPos = endPos
         endPos = incrMonth(endPos[1], endPos[0], holdLength)
         positions[i]['holdData'] = data.loc[isBetween([data['month'],data['year']],stPos,endPos)]
-
         positions[i]['estTotalReturn'] = computeTotalReturns(positions[i]['estData'])
         positions[i]['holdTotalReturn'] = computeTotalReturns(positions[i]['holdData'])
         positions[i]['holdReturns'] = computeReturns(positions[i]['holdData'])
-        positions[i]['portfolios'] = constructPortfolios(positions[i]['holdTotalReturn'])
+        positions[i]['portfolios'] = constructPortfolios(positions[i]['estTotalReturn'])
         positions[i]['portfolios'] = computePortRent(positions[i]['holdTotalReturn'], positions[i]['portfolios'])
         stPos = decrMonth(endPos[1], endPos[0], estLength)
+
     computeTransacCost()
     computeSharpeRatio()
 
@@ -190,7 +190,7 @@ exc = pd.ExcelFile("./cleanedData.xlsx")
 df = exc.parse(0)
 splitData(df)
 print(getSharpeRatio("Momentum"))
-print(getCumulPfReturns("Momentum"))
+print(getPfReturns("Momentum"))
 print(getCumulTransCost("Momentum"))
 print()
 print()

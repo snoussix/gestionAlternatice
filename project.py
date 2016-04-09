@@ -52,9 +52,9 @@ df2 = df2.loc[df2['stock_number'].isin(l)]
 tmp = [517,520,524,532,1057,547,559,117,82,511,497]
 df2 = df2.loc[~df2['stock_number'].isin(tmp)]
 
-cleanDfbeta = df2[['stock_number','year','month','return_rf','RiskFreeReturn','betaHML']]
+cleanDfbeta = df2[['stock_number','beta','year','month','return_rf','RiskFreeReturn','betaHML']]
 
-cleaner=['stock_number','year','month','return_rf','RiskFreeReturn','betaHML']
+cleaner=['stock_number','beta','year','month','return_rf','RiskFreeReturn','betaHML']
 
 cleanDf=[]
 for name in cleaner:

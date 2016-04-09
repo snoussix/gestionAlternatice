@@ -197,15 +197,15 @@ print()
 print()
 for i in range(1, 11):
     print("\\hline " + 'P'+ str(i)+" & ",end="")
-    Res = getCumulTransCost(i)
+    Res = getSharpeRatio(i)
     for j in range(0,nbPositions):
-        print("{:.5f}".format(Res[j])+"\% & ", end="")
+        print("{:.2f}".format(Res[j])+" & ", end="")
     print("\\\\")
 
-print("\\hline " +"Momentum"+" & ",end="")
-Res = getCumulTransCost("Momentum")
+print("\\hline " +"M"+" & ",end="")
+Res = getSharpeRatio("Momentum")
 for j in range(0,nbPositions):
-    print("{:.5f}".format(Res[j]) + "\% & ", end="")
+    print("{:.2f}".format(Res[j]) + " & ", end="")
 print("\\\\")
 
 

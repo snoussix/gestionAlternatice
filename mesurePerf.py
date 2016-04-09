@@ -5,9 +5,9 @@ np.seterr(all='raise')
 
 startMonth = 7
 
-startYear = 1995
+startYear = 1990
 endMonth = 12
-endYear = 2005
+endYear = 2000
 nbPositions = 10
 estLength = 6
 holdLength = 12
@@ -45,6 +45,14 @@ def isBetween(date, stt, end):
     return ((date[0] + date[1]*12) >= (stt[0] + stt[1]*12)) & ((date[0] + date[1]*12) < (end[0] + end[1]*12))
 
 
+def computeReturns(data):
+    returns = {}
+    for index, row in data.iterrows():
+        if row['stock_number'] in returns.keys():
+            returns[int(row['stock_number'])].append((1 + row['return_rf']-row['RiskFreeReturn'])**(1/12))
+        else:
+            returns[int(row['stock_number'])] = [(1 + row['return_rf'] - row['RiskFreeReturn'])**(1 / 12)]
+    return returns
 
 def computeTotalReturns(data):
     totalReturns = {}
@@ -92,6 +100,16 @@ def computeTransacCost():
         positions[i]['portfolios']['Momentum']['trans_cost'] = positions[i]['portfolios'][1]['trans_cost'] + positions[i]['portfolios'][int(100 / nbStock)]['trans_cost']
 
 
+# def computeSharpeRatio():
+#     for i in range(nbPositions):
+#         for pf_name in range(1, int(100 / nbStock) + 1):
+#             pos = positions[i]
+#             pf = pos['portfolios'][pf_name]
+#             for i in range(holdLength):
+#                 for stock in pf['stocks']:
+#                     return = pos['holdReturns'][stock]
+
+
 
 
 
@@ -107,18 +125,27 @@ def splitData(data):
 
         positions[i]['estTotalReturn'] = computeTotalReturns(positions[i]['estData'])
         positions[i]['holdTotalReturn'] = computeTotalReturns(positions[i]['holdData'])
+        positions[i]['holdReturns'] = computeReturns(positions[i]['holdData'])
         positions[i]['portfolios'] = constructPortfolios(positions[i]['holdTotalReturn'])
         positions[i]['portfolios'] = computePortRent(positions[i]['holdTotalReturn'], positions[i]['portfolios'])
         stPos = decrMonth(endPos[1], endPos[0], estLength)
     computeTransacCost()
 
 
-def getPfReturns(pf_name) :
+
+def getCumulPfReturns(pf_name) :
     results = []
     tmpCumulReturn = 1
     for pos_id in sorted(positions.keys()):
         tmpCumulReturn *= (1 + positions[pos_id]['portfolios'][pf_name]['rent'])
-        results.append(tmpCumulReturn)
+        results.append((tmpCumulReturn - 1)*100)
+    return results
+
+def getPfReturns(pf_name) :
+    results = []
+    tmpCumulReturn = 1
+    for pos_id in sorted(positions.keys()):
+        results.append(positions[pos_id]['portfolios'][pf_name]['rent']*100)
     return results
 
 def getTransCost(pf_name) :
@@ -137,40 +164,21 @@ exc = pd.ExcelFile("./cleanedData.xlsx")
 df = exc.parse(0)
 splitData(df)
 print(getPfReturns("Momentum"))
-print(getPfReturns(10))
+print(getPfReturns(3))
 print(getPfReturns(1))
 print(getTransCost("Momentum"))
 print()
 print()
 print()
 for i in range(1, 11):
-    print("\\hline " +str(i)+" & ",end="")
-    Res = getPfReturns(i)
+    print("\\hline " + 'P'+ str(i)+" & ",end="")
+    Res = getCumulPfReturns(i)
     for j in range(0,10):
-        print("{:.5f}".format(Res[j]*100)+"% & ", end="")
+        print("{:.2f}".format(Res[j])+"\% & ", end="")
     print("\\\\")
-#
-# def execute(data, nbStock):
-#     portRentas = {}
-#     marketPortfolioPrices = {1995: '100'}
-#     for year in range(1996,2006):
-#         df = data.loc[(data['year']==year-1) & (data['month']>6)]
-#         portfolios = constructPortfolios(df, nbStock)
-#         df2 = data.loc[(data['year']==year)]
-#         portfolios = computePortRent(df2, portfolios, nbStock)
-#         for name in portfolios:
-#             if name in portRentas.keys():
-#                 portRentas[name][year] = int(portfolios[name]['rent'] * 10000) / 100
-#             else:
-#                 portRentas[name] = { year : int(portfolios[name]['rent'] * 10000) / 100 }
-#
-#     return portRentas
-#
-# exc = pd.ExcelFile("./cleanedData.xlsx")
-# df = exc.parse(0)
-# result = execute(df,10)
-# print(result['Momentum'])
-# for year in result['Momentum']:
-#     print( result['Momentum'][year], ' \%' , end=' & ')
-# print(' ')
-# print(result)
+
+print("\\hline " +"Momentum"+" & ",end="")
+Res = getCumulPfReturns("Momentum")
+for j in range(0,10):
+    print("{:.2f}".format(Res[j]) + "\% & ", end="")
+print("\\\\")

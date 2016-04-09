@@ -4,9 +4,9 @@ import pandas as pd
 
 startMonth = 7
 
-startYear = 1995
+startYear = 1990
 endMonth = 12
-endYear = 2005
+endYear = 2000
 nbPositions = 10
 estLength = 6
 holdLength = 12
@@ -112,12 +112,19 @@ def splitData(data):
     computeTransacCost()
 
 
-def getPfReturns(pf_name) :
+def getCumulPfReturns(pf_name) :
     results = []
     tmpCumulReturn = 1
     for pos_id in sorted(positions.keys()):
         tmpCumulReturn *= (1 + positions[pos_id]['portfolios'][pf_name]['rent'])
-        results.append(tmpCumulReturn)
+        results.append((1 - tmpCumulReturn)*100)
+    return results
+
+def getPfReturns(pf_name) :
+    results = []
+    tmpCumulReturn = 1
+    for pos_id in sorted(positions.keys()):
+        results.append(positions[pos_id]['portfolios'][pf_name]['rent']*100)
     return results
 
 def getTransCost(pf_name) :
@@ -136,7 +143,7 @@ exc = pd.ExcelFile("./cleanedData.xlsx")
 df = exc.parse(0)
 splitData(df)
 print(getPfReturns("Momentum"))
-print(getPfReturns(10))
+print(getPfReturns(3))
 print(getPfReturns(1))
 print(getTransCost("Momentum"))
 print()

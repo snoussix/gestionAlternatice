@@ -44,6 +44,14 @@ def isBetween(date, stt, end):
     return ((date[0] + date[1]*12) >= (stt[0] + stt[1]*12)) & ((date[0] + date[1]*12) < (end[0] + end[1]*12))
 
 
+def computeReturns(data):
+    returns = {}
+    for index, row in data.iterrows():
+        if row['stock_number'] in returns.keys():
+            returns[int(row['stock_number'])].append((1 + row['return_rf']-row['RiskFreeReturn'])**(1/12))
+        else:
+            returns[int(row['stock_number'])] = [(1 + row['return_rf'] - row['RiskFreeReturn'])**(1 / 12)]
+    return returns
 
 def computeTotalReturns(data):
     totalReturns = {}
@@ -91,6 +99,16 @@ def computeTransacCost():
         positions[i]['portfolios']['Momentum']['trans_cost'] = positions[i]['portfolios'][1]['trans_cost'] + positions[i]['portfolios'][int(100 / nbStock)]['trans_cost']
 
 
+# def computeSharpeRatio():
+#     for i in range(nbPositions):
+#         for pf_name in range(1, int(100 / nbStock) + 1):
+#             pos = positions[i]
+#             pf = pos['portfolios'][pf_name]
+#             for i in range(holdLength):
+#                 for stock in pf['stocks']:
+#                     return = pos['holdReturns'][stock]
+
+
 
 
 
@@ -106,10 +124,12 @@ def splitData(data):
 
         positions[i]['estTotalReturn'] = computeTotalReturns(positions[i]['estData'])
         positions[i]['holdTotalReturn'] = computeTotalReturns(positions[i]['holdData'])
+        positions[i]['holdReturns'] = computeReturns(positions[i]['holdData'])
         positions[i]['portfolios'] = constructPortfolios(positions[i]['holdTotalReturn'])
         positions[i]['portfolios'] = computePortRent(positions[i]['holdTotalReturn'], positions[i]['portfolios'])
         stPos = decrMonth(endPos[1], endPos[0], estLength)
     computeTransacCost()
+
 
 
 def getCumulPfReturns(pf_name) :
@@ -117,7 +137,7 @@ def getCumulPfReturns(pf_name) :
     tmpCumulReturn = 1
     for pos_id in sorted(positions.keys()):
         tmpCumulReturn *= (1 + positions[pos_id]['portfolios'][pf_name]['rent'])
-        results.append((1 - tmpCumulReturn)*100)
+        results.append((tmpCumulReturn - 1)*100)
     return results
 
 def getPfReturns(pf_name) :
@@ -150,8 +170,14 @@ print()
 print()
 print()
 for i in range(1, 11):
-    print("\\hline " +str(i)+" & ",end="")
-    Res = getPfReturns(i)
+    print("\\hline " + 'P'+ str(i)+" & ",end="")
+    Res = getCumulPfReturns(i)
     for j in range(0,10):
-        print("{:.2f}".format(Res[j])+"% & ", end="")
+        print("{:.2f}".format(Res[j])+"\% & ", end="")
     print("\\\\")
+
+print("\\hline " +"Momentum"+" & ",end="")
+Res = getCumulPfReturns("Momentum")
+for j in range(0,10):
+    print("{:.2f}".format(Res[j]) + "\% & ", end="")
+print("\\\\")

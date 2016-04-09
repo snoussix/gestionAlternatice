@@ -80,7 +80,7 @@ def computePortRent(totalReturns, portfolios):
         for stock in portfolios[name]['stocks']:
             portfolios[name]['rent'] += ((totalReturns[stock] - 1) / nbStock)
 
-    portfolios['Momentum'] = { 'rent' : portfolios[int(100/nbStock)]['rent'] - portfolios[1]['rent'] }
+    portfolios['Momentum'] = {'rent' : portfolios[int(100/nbStock)]['rent'] - portfolios[1]['rent']}
     return portfolios
 
 def computeTransacCost():

@@ -52,23 +52,21 @@ df2 = df2.loc[df2['stock_number'].isin(l)]
 tmp = [517,520,524,532,1057,547,559,117,82,511,497]
 df2 = df2.loc[~df2['stock_number'].isin(tmp)]
 
-cleanDfbeta = df2[['stock_number','year','month','return_rf','RiskFreeReturn','betaHML']]
+cleanDf = df2[['stock_number','year','month','return_rf','RiskFreeReturn','betaHML']]
 
 cleaner=['stock_number','year','month','return_rf','RiskFreeReturn','betaHML']
-
-cleanDf=[]
+temp=[]
 for name in cleaner:
     # we don't use list comprehension to preserve mean
     mean2=0.0
     prec1=0.0
     prec2=0.0
-    cleanDf[name]=[]
-    for x in cleanDfbeta[name] :
+    for x,index in enumerate(cleanDf[name]) :
         mean2=(prec1+prec2)/2.0
         if np.isnan(x):
-            cleanDf.append(x)
+            cleanDf[name][index]=mean2
         else:
-            cleanDf.append(mean2)
+            cleanDf[name][index]=x
         prec2=prec1
         prec1=x
 

@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-np.seterr(all='raise')
+np.seterr(all='print')
 
 def getMonthCount(y1, m1, y2, m2):
     return (y2 - y1)*12 + m2 - m1

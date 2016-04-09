@@ -35,11 +35,11 @@ data = data.loc[data['stock_number'] != 1]
 data = data.loc[data['year'] > 1990]
 
 df2 = data
-df2 = df2.loc[~df2['illiq_amihud'].apply(np.isnan)]
-df2 = df2.loc[~df2['return_rf'].apply(np.isnan)]
-df2 = df2.loc[~df2['AIM_t1'].apply(np.isnan)]
-df2 = df2.loc[~df2['AIM'].apply(np.isnan)]
-df2 = df2.loc[~df2['RiskFreeReturn'].apply(np.isnan)]
+# df2 = df2.loc[~df2['illiq_amihud'].apply(np.isnan)]
+# df2 = df2.loc[~df2['return_rf'].apply(np.isnan)]
+# df2 = df2.loc[~df2['AIM_t1'].apply(np.isnan)]
+# df2 = df2.loc[~df2['AIM'].apply(np.isnan)]
+# df2 = df2.loc[~df2['RiskFreeReturn'].apply(np.isnan)]
 
 l = []
 
@@ -51,7 +51,28 @@ df2 = df2.loc[df2['stock_number'].isin(l)]
 #      517,520,524,532,1057,547,,559,117,82,511,497,357
 tmp = [517,520,524,532,1057,547,559,117,82,511,497]
 df2 = df2.loc[~df2['stock_number'].isin(tmp)]
-cleanDf = df2[['stock_number','year','month','return_rf','RiskFreeReturn']]
+
+cleanDfbeta = df2[['stock_number','year','month','return_rf','RiskFreeReturn','betaHML']]
+
+cleaner=['stock_number','year','month','return_rf','RiskFreeReturn','betaHML']
+
+cleanDf=[]
+for name in cleaner:
+    # we don't use list comprehension to preserve mean
+    mean2=0.0
+    prec1=0.0
+    prec2=0.0
+    cleanDf[name]=[]
+    for x in cleanDfbeta[name] :
+        mean2=(prec1+prec2)/2.0
+        if np.isnan(x):
+            cleanDf.append(x)
+        else:
+            cleanDf.append(mean2)
+        prec2=prec1
+        prec1=x
+
+
 writer = pd.ExcelWriter("./cleanedData.xlsx")
 cleanDf.to_excel(writer, 'Sheet1')
 writer.save()

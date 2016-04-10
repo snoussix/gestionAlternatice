@@ -59,12 +59,17 @@ cleaner=['return_rf','RiskFreeReturn','betaHML']
 cleanDf.is_copy = False
 #cleanDf['return_rf'][804]=5.555
 #cleanDf['return_rf'][805]=5.555
+names=cleanDf['stock_number'].values
+currentNumber=0
 for name in cleaner:
     # we don't use list comprehension to preserve mean
     mean2=0.0
-    prec1=0.0
-    prec2=0.0
+    test = cleanDf[name].values
     for index,x in enumerate(cleanDf[name]) :
+        if currentNumber!=names[index]:
+            currentNumber=names[index]
+            prec1=0.0
+            prec2=0.0
         mean2=(prec1+prec2)/2.0
         prec2=prec1
         if np.isnan(x):

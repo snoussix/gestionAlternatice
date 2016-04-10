@@ -55,7 +55,8 @@ df2 = df2.loc[~df2['stock_number'].isin(tmp)]
 cleanDf = df2[['stock_number','year','month','return_rf','RiskFreeReturn','betaHML']]
 
 cleaner=['stock_number','return_rf','RiskFreeReturn','betaHML']
-temp=[]
+
+
 for name in cleaner:
     # we don't use list comprehension to preserve mean
     mean2=0.0

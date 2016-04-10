@@ -54,22 +54,25 @@ df2 = df2.loc[~df2['stock_number'].isin(tmp)]
 
 cleanDf = df2[['stock_number','year','month','return_rf','RiskFreeReturn','betaHML']]
 
-cleaner=['stock_number','return_rf','RiskFreeReturn','betaHML']
+cleaner=['return_rf','RiskFreeReturn','betaHML']
 
-
+cleanDf.is_copy = False
+#cleanDf['return_rf'][804]=5.555
+#cleanDf['return_rf'][805]=5.555
 for name in cleaner:
     # we don't use list comprehension to preserve mean
     mean2=0.0
     prec1=0.0
     prec2=0.0
-    for x,index in enumerate(cleanDf[name]) :
+    for index,x in enumerate(cleanDf[name]) :
         mean2=(prec1+prec2)/2.0
-        if np.isnan(x):
-            cleanDf[name][index]=mean2
         prec2=prec1
-        prec1=x
-
-
+        if np.isnan(x):
+            cleanDf[name][802+index] = mean2
+            prec1=mean2
+        else:
+            prec1= x
+#cleanDf['return_rf'][806]=5.555
 writer = pd.ExcelWriter("./cleanedData.xlsx")
 cleanDf.to_excel(writer, 'Sheet1')
 writer.save()
